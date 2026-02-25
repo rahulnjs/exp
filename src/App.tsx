@@ -82,7 +82,7 @@ export default function BudgetTrackerApp() {
   const debounce = useDebounce();
 
   useEffect(() => {
-    fetch(`https://api.rider.rahulnjs.com/${DB}/data`)
+    fetch(`https://api.rider.rahulnjs.com/exp/${DB}/data`)
       .then((res) => res.json())
       .then((data) =>
         setBudgets(
@@ -118,7 +118,7 @@ export default function BudgetTrackerApp() {
   };
 
   const saveData = async (c, b) => {
-    const res = await fetch(`https://api.rider.rahulnjs.com/${DB}/data`, {
+    const res = await fetch(`https://api.rider.rahulnjs.com/exp/${DB}/data`, {
       body: JSON.stringify({
         cycle: c,
         budget: b,
