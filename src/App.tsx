@@ -41,6 +41,8 @@ function useDebounce() {
   };
 }
 
+const DB = location.hostname === "localhost" ? "expense_dev" : "expense";
+
 // Billing cycle starts on 25th
 const getCycleStartDate = () => {
   const now = new Date();
@@ -80,7 +82,7 @@ export default function BudgetTrackerApp() {
   const debounce = useDebounce();
 
   useEffect(() => {
-    fetch("https://api.rider.rahulnjs.com/expense/data")
+    fetch(`https://api.rider.rahulnjs.com/${DB}/data`)
       .then((res) => res.json())
       .then((data) =>
         setBudgets(
@@ -116,7 +118,7 @@ export default function BudgetTrackerApp() {
   };
 
   const saveData = async (c, b) => {
-    const res = await fetch("https://api.rider.rahulnjs.com/expense/data", {
+    const res = await fetch(`https://api.rider.rahulnjs.com/${DB}/data`, {
       body: JSON.stringify({
         cycle: c,
         budget: b,
