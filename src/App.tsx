@@ -183,6 +183,9 @@ export default function BudgetTrackerApp() {
         <p className="text-sm text-slate-500">
           Billing cycle from {cycleStart.toDateString()}
         </p>
+        <p className="text-sm text-slate-500">
+          Today <b style={{ color: "#000" }}>{today}</b>
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 sm:grid-cols-1">
@@ -269,7 +272,7 @@ export default function BudgetTrackerApp() {
           <CardContent className="p-6 space-y-5">
             <h2 className="text-lg font-semibold">Add Expense</h2>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-4">
               <Select
                 onValueChange={setSelectedBudget}
                 defaultValue={selectedBudget}
