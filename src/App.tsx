@@ -55,6 +55,15 @@ const getCycleStartDate = () => {
   return new Date(year, month - 1, 25);
 };
 
+const getToday = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${day}/${month}/${year}`;
+};
+
 const initialBudgets: Budget[] = [
   { id: "1", name: "Fancy Lunch/Dinner", monthlyLimit: 6000, expenses: [] },
   { id: "2", name: "Casual Lunch/Dinner", monthlyLimit: 4000, expenses: [] },
@@ -79,16 +88,13 @@ export default function BudgetTrackerApp() {
   const [selectedContributor, setSelectedContributor] = useState<string>("1");
 
   const cycleStart = useMemo(() => getCycleStartDate(), []);
+  const today = useMemo(() => getToday(), []);
   const debounce = useDebounce();
 
   useEffect(() => {
     fetch(`https://api.rider.rahulnjs.com/exp/${DB}/data`)
       .then((res) => res.json())
-      .then((data) =>
-        setBudgets(
-          data.find((d) => d.cycle === cycleStart.toLocaleDateString()).budget
-        )
-      );
+      .then((data) => setBudgets(data.find((d) => d.cycle === today).budget));
   }, []);
 
   const addExpense = () => {
@@ -117,23 +123,18 @@ export default function BudgetTrackerApp() {
     setDescription("");
   };
 
-  const saveData = async (c, b) => {
+  const saveData = async (c, b, overview) => {
     const res = await fetch(`https://api.rider.rahulnjs.com/exp/${DB}/data`, {
       body: JSON.stringify({
         cycle: c,
         budget: b,
+        overview,
       }),
       method: "PUT",
       headers: { "Content-Type": "application/json" },
     });
     const data = await res.json();
   };
-
-  useEffect(() => {
-    debounce(() => {
-      saveData(cycleStart.toLocaleDateString(), budgets);
-    });
-  }, [budgets]);
 
   const calculateSpent = (budget: Budget) =>
     budget.expenses
@@ -143,6 +144,16 @@ export default function BudgetTrackerApp() {
   const totalMonthlyLimit = budgets.reduce((sum, b) => sum + b.monthlyLimit, 0);
   const totalSpent = budgets.reduce((sum, b) => sum + calculateSpent(b), 0);
   const totalRemaining = totalMonthlyLimit - totalSpent;
+
+  useEffect(() => {
+    debounce(() => {
+      saveData(today, budgets, {
+        totalMonthlyLimit,
+        totalSpent,
+        totalRemaining,
+      });
+    });
+  }, [budgets]);
 
   const overallPercent =
     totalMonthlyLimit === 0 ? 0 : (totalSpent / totalMonthlyLimit) * 100;
