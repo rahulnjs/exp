@@ -202,6 +202,22 @@ export default function BudgetTrackerApp() {
   const totalSpent = budgets.reduce((sum, b) => sum + calculateSpent(b), 0);
   const totalRemaining = totalMonthlyLimit - totalSpent;
 
+  const overallPercent =
+    totalMonthlyLimit === 0 ? 0 : (totalSpent / totalMonthlyLimit) * 100;
+
+  const contributorTotals = contributors.map((contributor) => {
+    const total = budgets.reduce((sum, budget) => {
+      const contributorSpent = budget.expenses
+        .filter((e) => e.contributorId === contributor.id)
+        .reduce((s, e) => s + e.amount, 0);
+      return sum + contributorSpent;
+    }, 0);
+
+    const percent = totalSpent === 0 ? 0 : (total / totalSpent) * 100;
+
+    return { ...contributor, percent, total };
+  });
+
   useEffect(() => {
     if (!initialized.current) {
       return;
@@ -211,28 +227,10 @@ export default function BudgetTrackerApp() {
         totalMonthlyLimit,
         totalSpent,
         totalRemaining,
+        collab: contributorTotals,
       });
     });
   }, [budgets]);
-
-  const overallPercent =
-    totalMonthlyLimit === 0 ? 0 : (totalSpent / totalMonthlyLimit) * 100;
-
-  const contributorTotals = contributors.map((contributor) => {
-    const total = budgets.reduce((sum, budget) => {
-      const contributorSpent = budget.expenses
-        .filter(
-          (e) =>
-            e.contributorId === contributor.id && new Date(e.date) >= cycleStart
-        )
-        .reduce((s, e) => s + e.amount, 0);
-      return sum + contributorSpent;
-    }, 0);
-
-    const percent = totalSpent === 0 ? 0 : (total / totalSpent) * 100;
-
-    return { ...contributor, percent };
-  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4 pb-24 space-y-8">
