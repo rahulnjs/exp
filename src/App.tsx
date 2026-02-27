@@ -98,7 +98,7 @@ const initialBudgets: Budget[] = [
     id: "5",
     name: "Utilities",
     description: "Elecricity, Gas, Internet and water bills",
-    monthlyLimit: 3300,
+    monthlyLimit: 3500,
     expenses: [],
   },
   {
