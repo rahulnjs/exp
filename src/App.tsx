@@ -55,8 +55,8 @@ const getCycleStartDate = () => {
   return new Date(year, month - 1, 25);
 };
 
-const getToday = () => {
-  const date = new Date();
+const getFromattedDate = (d) => {
+  const date = d ?? new Date();
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -88,13 +88,17 @@ export default function BudgetTrackerApp() {
   const [selectedContributor, setSelectedContributor] = useState<string>("1");
 
   const cycleStart = useMemo(() => getCycleStartDate(), []);
-  const today = useMemo(() => getToday(), []);
+  const today = useMemo(() => getFromattedDate(new Date()), []);
   const debounce = useDebounce();
 
   useEffect(() => {
     fetch(`https://api.rider.rahulnjs.com/exp/${DB}/data`)
       .then((res) => res.json())
-      .then((data) => setBudgets(data.find((d) => d.cycle === today).budget));
+      .then((data) =>
+        setBudgets(
+          data.find((d) => d.cycle === getFromattedDate(cycleStart)).budget
+        )
+      );
   }, []);
 
   const addExpense = () => {
@@ -111,7 +115,7 @@ export default function BudgetTrackerApp() {
                   id: Date.now().toString(),
                   amount: Number(amount),
                   description,
-                  date: new Date().toISOString(),
+                  date: today,
                   contributorId: selectedContributor,
                 },
               ],
@@ -147,7 +151,7 @@ export default function BudgetTrackerApp() {
 
   useEffect(() => {
     debounce(() => {
-      saveData(today, budgets, {
+      saveData(getFromattedDate(cycleStart), budgets, {
         totalMonthlyLimit,
         totalSpent,
         totalRemaining,
