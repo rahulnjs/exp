@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 import { Input, TextArea } from "./components/ui/input";
@@ -29,6 +29,7 @@ interface Budget {
   name: string;
   monthlyLimit: number;
   expenses: Expense[];
+  description: string;
 }
 
 function useDebounce() {
@@ -65,14 +66,62 @@ const getFromattedDate = (d) => {
 };
 
 const initialBudgets: Budget[] = [
-  { id: "1", name: "Fancy Lunch/Dinner", monthlyLimit: 6000, expenses: [] },
-  { id: "2", name: "Casual Lunch/Dinner", monthlyLimit: 4000, expenses: [] },
-  { id: "3", name: "Clothing/Misc", monthlyLimit: 10000, expenses: [] },
-  { id: "4", name: "Rent", monthlyLimit: 35000, expenses: [] },
-  { id: "5", name: "Utilities", monthlyLimit: 3300, expenses: [] },
-  { id: "6", name: "Cab", monthlyLimit: 2000, expenses: [] },
-  { id: "7", name: "Grocery", monthlyLimit: 16000, expenses: [] },
-  { id: "8", name: "Supplements", monthlyLimit: 1500, expenses: [] },
+  {
+    id: "1",
+    name: "Dine out",
+    description: "Eating out or online orders",
+    monthlyLimit: 6000,
+    expenses: [],
+  },
+  {
+    id: "2",
+    name: "Raw Meat & Fish",
+    description: "Raw Chicken, Mutton and Fish etc.",
+    monthlyLimit: 6000,
+    expenses: [],
+  },
+  {
+    id: "3",
+    name: "Clothing & Misc",
+    description: "Clothing or miscellenous ",
+    monthlyLimit: 10000,
+    expenses: [],
+  },
+  {
+    id: "4",
+    name: "Rent",
+    description: "Monthly house rental",
+    monthlyLimit: 35000,
+    expenses: [],
+  },
+  {
+    id: "5",
+    name: "Utilities",
+    description: "Elecricity, Gas, Internet and water bills",
+    monthlyLimit: 3300,
+    expenses: [],
+  },
+  {
+    id: "6",
+    name: "Cab",
+    description: "Ola/Uber/Rapido services",
+    monthlyLimit: 2000,
+    expenses: [],
+  },
+  {
+    id: "7",
+    name: "Grocery",
+    description: "Day to day groceries",
+    monthlyLimit: 16000,
+    expenses: [],
+  },
+  {
+    id: "8",
+    name: "Supplements",
+    description: "Medicine or health supplements",
+    monthlyLimit: 1500,
+    expenses: [],
+  },
 ];
 
 export default function BudgetTrackerApp() {
@@ -90,15 +139,21 @@ export default function BudgetTrackerApp() {
   const cycleStart = useMemo(() => getCycleStartDate(), []);
   const today = useMemo(() => getFromattedDate(new Date()), []);
   const debounce = useDebounce();
+  const initialized = useRef(false);
 
   useEffect(() => {
-    fetch(`https://api.rider.rahulnjs.com/exp/${DB}/data`)
+    fetch(
+      `https://api.rider.rahulnjs.com/exp/${DB}/data/${getFromattedDate(
+        cycleStart
+      ).replaceAll("/", "-")}`
+    )
       .then((res) => res.json())
-      .then((data) =>
-        setBudgets(
-          data.find((d) => d.cycle === getFromattedDate(cycleStart)).budget
-        )
-      );
+      .then((data) => {
+        if (data.length > 0) {
+          setBudgets(data[0].budget);
+        }
+        setTimeout(() => (initialized.current = true), 1000);
+      });
   }, []);
 
   const addExpense = () => {
@@ -115,7 +170,7 @@ export default function BudgetTrackerApp() {
                   id: Date.now().toString(),
                   amount: Number(amount),
                   description,
-                  date: today,
+                  date: new Date().toISOString(),
                   contributorId: selectedContributor,
                 },
               ],
@@ -141,15 +196,16 @@ export default function BudgetTrackerApp() {
   };
 
   const calculateSpent = (budget: Budget) =>
-    budget.expenses
-      .filter((e) => new Date(e.date) >= cycleStart)
-      .reduce((sum, e) => sum + e.amount, 0);
+    budget.expenses.reduce((sum, e) => sum + e.amount, 0);
 
   const totalMonthlyLimit = budgets.reduce((sum, b) => sum + b.monthlyLimit, 0);
   const totalSpent = budgets.reduce((sum, b) => sum + calculateSpent(b), 0);
   const totalRemaining = totalMonthlyLimit - totalSpent;
 
   useEffect(() => {
+    if (!initialized.current) {
+      return;
+    }
     debounce(() => {
       saveData(getFromattedDate(cycleStart), budgets, {
         totalMonthlyLimit,
@@ -360,7 +416,7 @@ export default function BudgetTrackerApp() {
                     ₹{remaining} left
                   </span>
                 </div>
-
+                <div className="text-gray-400 !mt-px">{budget.description}</div>
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
