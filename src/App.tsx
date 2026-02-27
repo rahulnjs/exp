@@ -416,7 +416,9 @@ export default function BudgetTrackerApp() {
                     ₹{remaining} left
                   </span>
                 </div>
-                <div className="text-gray-400 !mt-px">{budget.description}</div>
+                <div className="text-gray-400 !mt-px text-sm">
+                  {budget.description}
+                </div>
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
