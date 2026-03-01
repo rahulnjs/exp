@@ -10,6 +10,13 @@ import {
   SelectValue,
 } from "./components/ui/select";
 import { motion } from "framer-motion";
+import {
+  differenceInCalendarDays,
+  addMonths,
+  addDays,
+  isAfter,
+} from "date-fns";
+import { toast } from "react-toastify";
 
 interface Contributor {
   id: string;
@@ -49,11 +56,13 @@ const getCycleStartDate = () => {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
-
+  let cycleDate;
   if (now.getDate() >= 25) {
-    return new Date(year, month, 25);
+    cycleDate = new Date(year, month, 25);
   }
-  return new Date(year, month - 1, 25);
+  cycleDate = new Date(year, month - 1, 25);
+  const nextCycleDate = addMonths(cycleDate, 1);
+  return [cycleDate, nextCycleDate];
 };
 
 const getFromattedDate = (d) => {
@@ -136,10 +145,25 @@ export default function BudgetTrackerApp() {
   const [description, setDescription] = useState<string>("");
   const [selectedContributor, setSelectedContributor] = useState<string>("1");
 
-  const cycleStart = useMemo(() => getCycleStartDate(), []);
+  const [cycleStart, nextCycleStart] = useMemo(() => getCycleStartDate(), []);
   const today = useMemo(() => getFromattedDate(new Date()), []);
+  const daysPassed = useMemo(() => {
+    let st = addDays(new Date(cycleStart), 1);
+    const map = {};
+    while (true) {
+      map[st.toISOString().replace(/T.*$/, "")] = true;
+      st = addDays(st, 1);
+      const tomorrow = addDays(new Date(), 1);
+      if (isAfter(st, tomorrow)) {
+        break;
+      }
+    }
+    return map;
+  }, []);
   const debounce = useDebounce();
   const initialized = useRef(false);
+  const daysLeftInCycle = differenceInCalendarDays(nextCycleStart, new Date());
+  const lastExpenseName = useRef("");
 
   useEffect(() => {
     fetch(
@@ -160,23 +184,25 @@ export default function BudgetTrackerApp() {
     if (!amount) return;
 
     setBudgets((prev) =>
-      prev.map((b) =>
-        b.id === selectedBudget
-          ? {
-              ...b,
-              expenses: [
-                ...b.expenses,
-                {
-                  id: Date.now().toString(),
-                  amount: Number(amount),
-                  description,
-                  date: new Date().toISOString(),
-                  contributorId: selectedContributor,
-                },
-              ],
-            }
-          : b
-      )
+      prev.map((b) => {
+        if (b.id === selectedBudget) {
+          lastExpenseName.current = b.name;
+          return {
+            ...b,
+            expenses: [
+              ...b.expenses,
+              {
+                id: Date.now().toString(),
+                amount: Number(amount),
+                description,
+                date: new Date().toISOString(),
+                contributorId: selectedContributor,
+              },
+            ],
+          };
+        }
+        return b;
+      })
     );
     setAmount("");
     setDescription("");
@@ -193,6 +219,18 @@ export default function BudgetTrackerApp() {
       headers: { "Content-Type": "application/json" },
     });
     const data = await res.json();
+    if (data.modifiedCount) {
+      toast.success(`${lastExpenseName.current} expense added`, {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      });
+    }
   };
 
   const calculateSpent = (budget: Budget) =>
@@ -201,6 +239,12 @@ export default function BudgetTrackerApp() {
   const totalMonthlyLimit = budgets.reduce((sum, b) => sum + b.monthlyLimit, 0);
   const totalSpent = budgets.reduce((sum, b) => sum + calculateSpent(b), 0);
   const totalRemaining = totalMonthlyLimit - totalSpent;
+  const allDays = new Set(
+    budgets
+      .map((b) => b.expenses)
+      .flat()
+      .map((e) => e.date.replace(/T.*$/, ""))
+  );
 
   const overallPercent =
     totalMonthlyLimit === 0 ? 0 : (totalSpent / totalMonthlyLimit) * 100;
@@ -320,6 +364,36 @@ export default function BudgetTrackerApp() {
                   transition={{ duration: 0.7 }}
                   className="h-3 bg-gradient-to-r from-indigo-400 to-violet-600"
                 />
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <div className="grid grid-cols-2 space-between items-center">
+                <p className="text-xs text-slate-400 tracking-wide">
+                  No expsense days
+                </p>
+                <p className="text-xl text-right text-slate-700">
+                  {allDays.size} / {Object.keys(daysPassed).length}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 space-between items-center">
+                <p className="text-xs text-slate-400 tracking-wide">
+                  Days left
+                </p>
+                <p className="text-xl text-right text-slate-700">
+                  {daysLeftInCycle}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 space-between items-center">
+                <p className="text-xs text-slate-400 tracking-wide">
+                  Safe to spend
+                </p>
+                <p className="text-xl text-right relative pr-7 text-slate-700">
+                  ₹{(totalRemaining / daysLeftInCycle).toFixed(0)}
+                  <div className="absolute text-[10px] top-[3px] right-0 font-normal text-[#b8b8b8]">
+                    / day
+                  </div>
+                </p>
               </div>
             </div>
           </CardContent>
