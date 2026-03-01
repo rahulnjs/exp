@@ -238,6 +238,9 @@ export default function BudgetTrackerApp() {
 
   const totalMonthlyLimit = budgets.reduce((sum, b) => sum + b.monthlyLimit, 0);
   const totalSpent = budgets.reduce((sum, b) => sum + calculateSpent(b), 0);
+  const totalSpentWithoutRent = budgets
+    .filter((b) => b.id !== "4")
+    .reduce((sum, b) => sum + calculateSpent(b), 0);
   const totalRemaining = totalMonthlyLimit - totalSpent;
   const allDays = new Set(
     budgets
@@ -391,7 +394,7 @@ export default function BudgetTrackerApp() {
                   Spending rate
                 </p>
                 <p className="text-xl text-right relative pr-7 text-slate-700">
-                  ₹{(totalSpent / daysPassed).toFixed(0)}
+                  ₹{(totalSpentWithoutRent / daysPassed).toFixed(0)}
                   <div className="absolute text-[10px] top-[3px] right-0 font-normal text-[#b8b8b8]">
                     / day
                   </div>
