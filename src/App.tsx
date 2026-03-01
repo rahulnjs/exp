@@ -370,46 +370,48 @@ export default function BudgetTrackerApp() {
               </div>
             </div>
 
-            <div className="mt-5">
-              <div className="grid grid-cols-2 space-between items-center">
+            <div className="mt-6 grid grid-cols-2 items-center gap-5">
+              <div>
+                <p className="text-3xl text-slate-700">
+                  {allDays} / {daysPassed}
+                </p>
                 <p className="text-xs text-slate-400 tracking-wide">
                   No expsense days
                 </p>
-                <p className="text-xl text-right text-slate-700">
-                  {allDays} / {daysPassed}
-                </p>
               </div>
 
-              <div className="grid grid-cols-2 space-between items-center">
+              <div>
+                <p className="text-3xl text-slate-700">{daysLeftInCycle}</p>
                 <p className="text-xs text-slate-400 tracking-wide">
                   Days left
                 </p>
-                <p className="text-xl text-right text-slate-700">
-                  {daysLeftInCycle}
-                </p>
               </div>
 
-              <div className="grid grid-cols-2 space-between items-center">
+              <div>
+                <p className="text-3xl relative pr-7 text-slate-700">
+                  <div className="relative w-min">
+                    ₹{(totalSpentWithoutRent / daysPassed).toFixed(0)}
+                    <div className="absolute text-[10px] top-[3px] right-[-28px] font-normal text-[#b8b8b8]">
+                      / day
+                    </div>
+                  </div>
+                </p>
                 <p className="text-xs text-slate-400 tracking-wide">
                   Spending rate
                 </p>
-                <p className="text-xl text-right relative pr-7 text-slate-700">
-                  ₹{(totalSpentWithoutRent / daysPassed).toFixed(0)}
-                  <div className="absolute text-[10px] top-[3px] right-0 font-normal text-[#b8b8b8]">
-                    / day
-                  </div>
-                </p>
               </div>
 
-              <div className="grid grid-cols-2 space-between items-center">
+              <div>
+                <p className="text-3xl relative pr-7 text-slate-700">
+                  <div className="relative w-min">
+                    ₹{(totalRemaining / daysLeftInCycle).toFixed(0)}
+                    <div className="absolute text-[10px] top-[3px] right-[-28px] font-normal text-[#b8b8b8]">
+                      / day
+                    </div>
+                  </div>
+                </p>
                 <p className="text-xs text-slate-400 tracking-wide">
                   Safe to spend
-                </p>
-                <p className="text-xl text-right relative pr-7 text-slate-700">
-                  ₹{(totalRemaining / daysLeftInCycle).toFixed(0)}
-                  <div className="absolute text-[10px] top-[3px] right-0 font-normal text-[#b8b8b8]">
-                    / day
-                  </div>
                 </p>
               </div>
             </div>
