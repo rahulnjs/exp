@@ -373,7 +373,7 @@ export default function BudgetTrackerApp() {
             <div className="mt-6 grid grid-cols-2 items-center gap-5">
               <div>
                 <p className="text-3xl text-slate-700">
-                  {allDays} / {daysPassed}
+                  {allDays}/{daysPassed}
                 </p>
                 <p className="text-xs text-slate-400 tracking-wide">
                   No expsense days
