@@ -149,16 +149,16 @@ export default function BudgetTrackerApp() {
   const today = useMemo(() => getFromattedDate(new Date()), []);
   const daysPassed = useMemo(() => {
     let st = addDays(new Date(cycleStart), 1);
-    const map = {};
+    let dc = 0;
     while (true) {
-      map[st.toISOString().replace(/T.*$/, "")] = true;
+      dc++;
       st = addDays(st, 1);
       const tomorrow = addDays(new Date(), 1);
       if (isAfter(st, tomorrow)) {
         break;
       }
     }
-    return map;
+    return dc;
   }, []);
   const debounce = useDebounce();
   const initialized = useRef(false);
@@ -244,7 +244,7 @@ export default function BudgetTrackerApp() {
       .map((b) => b.expenses)
       .flat()
       .map((e) => e.date.replace(/T.*$/, ""))
-  );
+  ).size;
 
   const overallPercent =
     totalMonthlyLimit === 0 ? 0 : (totalSpent / totalMonthlyLimit) * 100;
@@ -373,9 +373,10 @@ export default function BudgetTrackerApp() {
                   No expsense days
                 </p>
                 <p className="text-xl text-right text-slate-700">
-                  {allDays.size} / {Object.keys(daysPassed).length}
+                  {allDays} / {daysPassed}
                 </p>
               </div>
+
               <div className="grid grid-cols-2 space-between items-center">
                 <p className="text-xs text-slate-400 tracking-wide">
                   Days left
@@ -384,6 +385,19 @@ export default function BudgetTrackerApp() {
                   {daysLeftInCycle}
                 </p>
               </div>
+
+              <div className="grid grid-cols-2 space-between items-center">
+                <p className="text-xs text-slate-400 tracking-wide">
+                  Spending rate
+                </p>
+                <p className="text-xl text-right relative pr-7 text-slate-700">
+                  ₹{(totalSpent / daysPassed).toFixed(0)}
+                  <div className="absolute text-[10px] top-[3px] right-0 font-normal text-[#b8b8b8]">
+                    / day
+                  </div>
+                </p>
+              </div>
+
               <div className="grid grid-cols-2 space-between items-center">
                 <p className="text-xs text-slate-400 tracking-wide">
                   Safe to spend
