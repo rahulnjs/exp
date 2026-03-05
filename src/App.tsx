@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./components/ui/select";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   differenceInCalendarDays,
   addMonths,
@@ -144,6 +144,7 @@ export default function BudgetTrackerApp() {
   const [amount, setAmount] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [selectedContributor, setSelectedContributor] = useState<string>("1");
+  const [toggles, setToggles] = useState<Record<string, boolean>>();
 
   const [cycleStart, nextCycleStart] = useMemo(() => getCycleStartDate(), []);
   const today = useMemo(() => getFromattedDate(new Date()), []);
@@ -179,6 +180,17 @@ export default function BudgetTrackerApp() {
         setTimeout(() => (initialized.current = true), 1000);
       });
   }, []);
+
+  useEffect(() => {
+    if (budgets.length > 0) {
+      setToggles(
+        budgets.reduce((acc, budget) => {
+          acc[budget.id] = false;
+          return acc;
+        }, {})
+      );
+    }
+  }, [budgets]);
 
   const addExpense = () => {
     if (!amount) return;
@@ -376,7 +388,7 @@ export default function BudgetTrackerApp() {
                   {allDays}/{daysPassed}
                 </p>
                 <p className="text-xs text-slate-400 tracking-wide">
-                  No expsense days
+                  Expsense days
                 </p>
               </div>
 
@@ -481,7 +493,7 @@ export default function BudgetTrackerApp() {
       </div>
 
       {/* Individual Budgets */}
-      <div className=" grid gap-4 md:grid-cols-3 lg:grid-cols:4 sm:grid-cols-1">
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols:4 sm:grid-cols-1">
         {budgets.map((budget) => {
           const spent = calculateSpent(budget);
           const remaining = budget.monthlyLimit - spent;
@@ -495,36 +507,113 @@ export default function BudgetTrackerApp() {
               ? "from-amber-400 to-orange-500"
               : "from-rose-400 to-red-600";
 
-          return (
-            <Card
-              key={budget.id}
-              className="rounded-3xl shadow-lg bg-white/80 backdrop-blur border border-slate-600 border-solid"
-            >
-              <CardContent className="p-6 space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium">{budget.name}</h3>
-                  <span className="text-xs text-slate-500">
-                    ₹{remaining} left
-                  </span>
-                </div>
-                <div className="text-gray-400 !mt-px text-sm">
-                  {budget.description}
-                </div>
-                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(percent, 100)}%` }}
-                    transition={{ duration: 0.6 }}
-                    className={`h-2 bg-gradient-to-r ${progressColor} rounded-full`}
-                  />
-                </div>
+          // const expenses: Expense[] = [];
+          // for (let i = budget.expenses.length - 1; i >= 0; i--) {
+          //   console.log(budget.expenses[i].date);
+          //   expenses.push(budget.expenses[i]);
+          // }
 
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>₹{spent} spent</span>
-                  <span>₹{budget.monthlyLimit} limit</span>
-                </div>
-              </CardContent>
-            </Card>
+          return (
+            <div
+              onClick={() =>
+                setToggles((t) => ({
+                  ...t,
+                  [budget.id]: !t?.[budget.id],
+                }))
+              }
+            >
+              <Card
+                key={budget.id}
+                className="rounded-3xl shadow-lg bg-white/80 backdrop-blur border border-slate-600 border-solid"
+              >
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-medium">{budget.name}</h3>
+                    <span className="text-xs text-slate-500">
+                      ₹{remaining} left
+                    </span>
+                  </div>
+                  <div className="text-gray-400 !mt-px text-sm">
+                    {budget.description}
+                  </div>
+                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(percent, 100)}%` }}
+                      transition={{ duration: 0.6 }}
+                      className={`h-2 bg-gradient-to-r ${progressColor} rounded-full`}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>₹{spent} spent</span>
+                    <span>₹{budget.monthlyLimit} limit</span>
+                  </div>
+                  <AnimatePresence>
+                    {toggles?.[budget.id] && (
+                      <motion.div
+                        initial={{ height: "0px" }}
+                        animate={{ height: "fit-content" }}
+                        transition={{ duration: 0.6 }}
+                        exit={{ height: "0px" }}
+                        className={``}
+                      >
+                        <div className="max-h-[200px] overflow-y-auto">
+                          <table className="w-[100%] border-collapse">
+                            <thead>
+                              <tr
+                                className="text-sm text-gray-600 sticky top-[0px] bg-white"
+                                style={{
+                                  boxShadow: "0px 1px 0px 0px rgba(0,0,0, .1)",
+                                }}
+                              >
+                                <th className="text-left pb-1 pl-2">Date</th>
+                                <th className="text-left pb-1 pl-2">
+                                  Description
+                                </th>
+                                <th className="text-left pb-1 text-right pl-2">
+                                  Amount
+                                </th>
+                                <th className="text-left pb-1">Paid by</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {budget.expenses.map((exp) => (
+                                <tr className="text-sm">
+                                  <td className="p-1 pl-2">
+                                    {getFromattedDate(new Date(exp.date))}
+                                  </td>
+                                  <td className="p-1 pl-2 text-ellipsis">
+                                    {exp.description || "-"}
+                                  </td>
+
+                                  <td className="p-1 pl-2 text-right">
+                                    ₹{exp.amount}
+                                  </td>
+                                  <td className="p-1 pl-2">
+                                    {
+                                      contributors.find(
+                                        (c) => c.id === exp.contributorId
+                                      )?.name
+                                    }
+                                  </td>
+                                </tr>
+                              ))}
+                              {budget.expenses.length === 0 && (
+                                <tr>
+                                  <td colSpan={4} className="text-center p-3">
+                                    No expenses yet.
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </CardContent>
+              </Card>
+            </div>
           );
         })}
       </div>
