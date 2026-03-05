@@ -65,13 +65,13 @@ const getCycleStartDate = () => {
   return [cycleDate, nextCycleDate];
 };
 
-const getFromattedDate = (d) => {
+const getFromattedDate = (d, withYear = true) => {
   const date = d ?? new Date();
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
 
-  return `${day}/${month}/${year}`;
+  return withYear ? `${day}/${month}/${year}` : `${day}/${month}`;
 };
 
 const initialBudgets: Budget[] = [
@@ -507,12 +507,6 @@ export default function BudgetTrackerApp() {
               ? "from-amber-400 to-orange-500"
               : "from-rose-400 to-red-600";
 
-          // const expenses: Expense[] = [];
-          // for (let i = budget.expenses.length - 1; i >= 0; i--) {
-          //   console.log(budget.expenses[i].date);
-          //   expenses.push(budget.expenses[i]);
-          // }
-
           return (
             <div
               onClick={() =>
@@ -581,8 +575,9 @@ export default function BudgetTrackerApp() {
                                 <tr className="text-sm">
                                   <td className="p-1 pl-2">
                                     {getFromattedDate(
-                                      new Date(exp.date)
-                                    ).replace(/\/dddd$/, "")}
+                                      new Date(exp.date),
+                                      false
+                                    )}
                                   </td>
                                   <td className="p-1 pl-2 text-ellipsis">
                                     {exp.description || "-"}
