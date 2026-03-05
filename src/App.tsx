@@ -573,14 +573,16 @@ export default function BudgetTrackerApp() {
                                 <th className="text-left pb-1 text-right pl-2">
                                   Amount
                                 </th>
-                                <th className="text-left pb-1">Paid by</th>
+                                <th className="text-left pb-1 pl-2">By</th>
                               </tr>
                             </thead>
                             <tbody>
                               {budget.expenses.map((exp) => (
                                 <tr className="text-sm">
                                   <td className="p-1 pl-2">
-                                    {getFromattedDate(new Date(exp.date))}
+                                    {getFromattedDate(
+                                      new Date(exp.date)
+                                    ).replace(/\/dddd$/, "")}
                                   </td>
                                   <td className="p-1 pl-2 text-ellipsis">
                                     {exp.description || "-"}
