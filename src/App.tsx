@@ -273,9 +273,17 @@ export default function BudgetTrackerApp() {
     }, 0);
 
     const percent = totalSpent === 0 ? 0 : (total / totalSpent) * 100;
-
     return { ...contributor, percent, total };
   });
+
+  const getContriByEach = (b: Budget) => {
+    return contributors.map((contributor) => {
+      const spent = b.expenses
+        .filter((e) => e.contributorId === contributor.id)
+        .reduce((s, e) => s + e.amount, 0);
+      return { ...contributor, spent };
+    }, 0);
+  };
 
   useEffect(() => {
     if (!initialized.current) {
@@ -382,9 +390,9 @@ export default function BudgetTrackerApp() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 items-center gap-5">
+            <div className="mt-6 grid grid-cols-3 items-center gap-5">
               <div>
-                <p className="text-3xl text-slate-700">
+                <p className="text-2xl sm:text-xl  text-slate-700">
                   {allDays}/{daysPassed}
                 </p>
                 <p className="text-xs text-slate-400 tracking-wide">
@@ -393,14 +401,25 @@ export default function BudgetTrackerApp() {
               </div>
 
               <div>
-                <p className="text-3xl text-slate-700">{daysLeftInCycle}</p>
+                <p className="text-2xl sm:text-xl  text-slate-700">
+                  {daysLeftInCycle}
+                </p>
                 <p className="text-xs text-slate-400 tracking-wide">
                   Days left
                 </p>
               </div>
 
               <div>
-                <p className="text-3xl relative pr-7 text-slate-700">
+                <p className="text-2xl sm:text-xl  text-slate-700">
+                  ₹{contributorTotals[0].total}
+                </p>
+                <p className="text-xs text-slate-400 tracking-wide">
+                  By {contributors[0].name}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-2xl sm:text-xl  relative pr-7 text-slate-700">
                   <div className="relative w-min">
                     ₹{(totalSpentWithoutRent / daysPassed).toFixed(0)}
                     <div className="absolute text-[10px] top-[3px] right-[-28px] font-normal text-[#b8b8b8]">
@@ -414,7 +433,7 @@ export default function BudgetTrackerApp() {
               </div>
 
               <div>
-                <p className="text-3xl relative pr-7 text-slate-700">
+                <p className="text-2xl sm:text-xl  relative pr-7 text-slate-700">
                   <div className="relative w-min">
                     ₹{(totalRemaining / daysLeftInCycle).toFixed(0)}
                     <div className="absolute text-[10px] top-[3px] right-[-28px] font-normal text-[#b8b8b8]">
@@ -424,6 +443,15 @@ export default function BudgetTrackerApp() {
                 </p>
                 <p className="text-xs text-slate-400 tracking-wide">
                   Safe to spend
+                </p>
+              </div>
+
+              <div>
+                <p className="text-2xl sm:text-xl  text-slate-700">
+                  ₹{contributorTotals[1].total}
+                </p>
+                <p className="text-xs text-slate-400 tracking-wide">
+                  By {contributors[1].name}
                 </p>
               </div>
             </div>
@@ -506,6 +534,7 @@ export default function BudgetTrackerApp() {
               : percent < 80
               ? "from-amber-400 to-orange-500"
               : "from-rose-400 to-red-600";
+          const contris = getContriByEach(budget);
 
           return (
             <div
@@ -524,7 +553,8 @@ export default function BudgetTrackerApp() {
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium">{budget.name}</h3>
                     <span className="text-xs text-slate-500">
-                      ₹{remaining} left
+                      ₹{Math.abs(remaining)}{" "}
+                      {remaining > 0 ? "left" : "over budget"}
                     </span>
                   </div>
                   <div className="text-gray-400 !mt-px text-sm">
@@ -605,6 +635,23 @@ export default function BudgetTrackerApp() {
                             </tbody>
                           </table>
                         </div>
+                        {budget.expenses.length !== 0 && (
+                          <div
+                            className="p-1 pr-2"
+                            style={{
+                              borderTop: "1px solid #e0e0e0",
+                            }}
+                          >
+                            {contris.map((c) => (
+                              <div className="flex gap-2 w-[100%] justify-end">
+                                <div>{c.name}</div>
+                                <div className="text-right min-w-[70px]">
+                                  ₹{c.spent}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>
