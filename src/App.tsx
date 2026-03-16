@@ -40,7 +40,7 @@ interface Budget {
 }
 
 function useDebounce() {
-  let timer: number | null = null;
+  let timer: NodeJS.Timeout;
   return (fn, t = 500) => {
     if (timer) {
       clearTimeout(timer);
