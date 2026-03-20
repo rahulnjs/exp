@@ -158,7 +158,7 @@ export default function BudgetTrackerApp() {
   const [selectedContributor, setSelectedContributor] = useState<string>("1");
   const [toggles, setToggles] = useState<Record<string, boolean>>();
   const [showFullOverview, setShowFullOverview] = useState(false);
-
+  const [showAddExpForm, setShowAddExpForm] = useState(true);
   const [showRecentExp, setShowRecentExp] = useState(false);
 
   const [cycleStart, nextCycleStart] = useMemo(() => getCycleStartDate(), []);
@@ -516,62 +516,76 @@ export default function BudgetTrackerApp() {
 
         {/* Add Expense */}
         <Card className="rounded-3xl border-1 shadow-xl bg-white border border-slate-600 border-solid">
-          <CardContent className="p-6 space-y-5">
+          <CardContent
+            className="p-6 space-y-5"
+            onClick={() => setShowAddExpForm((s) => !s)}
+          >
             <h2 className="text-lg font-semibold">Add Expense</h2>
+            <AnimatePresence>
+              {showAddExpForm && (
+                <motion.div
+                  initial={{ height: "0px" }}
+                  animate={{ height: "fit-content" }}
+                  transition={{ duration: 0.6 }}
+                  exit={{ height: "0px" }}
+                  className={``}
+                >
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Select
+                      onValueChange={setSelectedBudget}
+                      defaultValue={selectedBudget}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Budget" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {budgets.map((b) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <Select
-                onValueChange={setSelectedBudget}
-                defaultValue={selectedBudget}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Budget" />
-                </SelectTrigger>
-                <SelectContent>
-                  {budgets.map((b) => (
-                    <SelectItem key={b.id} value={b.id}>
-                      {b.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    <Input
+                      type="number"
+                      placeholder="Amount"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                    />
+                  </div>
 
-              <Input
-                type="number"
-                placeholder="Amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
+                  <TextArea
+                    placeholder="Descrption (optional)"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
 
-            <TextArea
-              placeholder="Descrption (optional)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+                  <Select
+                    onValueChange={setSelectedContributor}
+                    defaultValue={selectedContributor}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Contributor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {contributors.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-            <Select
-              onValueChange={setSelectedContributor}
-              defaultValue={selectedContributor}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Contributor" />
-              </SelectTrigger>
-              <SelectContent>
-                {contributors.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Button
-              className="w-full rounded-2xl bg-slate-900 hover:bg-slate-800 text-white p-4"
-              onClick={addExpense}
-            >
-              Add Expense
-            </Button>
+                  <Button
+                    className="w-full rounded-2xl bg-slate-900 hover:bg-slate-800 text-white p-4"
+                    onClick={addExpense}
+                  >
+                    Add Expense
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </CardContent>
         </Card>
 
