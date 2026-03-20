@@ -530,59 +530,63 @@ export default function BudgetTrackerApp() {
                   exit={{ height: "0px" }}
                   className={``}
                 >
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="form" onClick={(e) => e.stopPropagation()}>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <Select
+                        onValueChange={setSelectedBudget}
+                        defaultValue={selectedBudget}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Budget" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {budgets.map((b) => (
+                            <SelectItem key={b.id} value={b.id}>
+                              {b.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Input
+                        type="number"
+                        placeholder="Amount"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                      />
+                    </div>
+
+                    <TextArea
+                      placeholder="Descrption (optional)"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      style={{ margin: "16px 0px" }}
+                    />
+
                     <Select
-                      onValueChange={setSelectedBudget}
-                      defaultValue={selectedBudget}
+                      onValueChange={setSelectedContributor}
+                      defaultValue={selectedContributor}
+                      style={{ marginBottom: "16px" }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select Budget" />
+                        <SelectValue placeholder="Select Contributor" />
                       </SelectTrigger>
                       <SelectContent>
-                        {budgets.map((b) => (
-                          <SelectItem key={b.id} value={b.id}>
-                            {b.name}
+                        {contributors.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
 
-                    <Input
-                      type="number"
-                      placeholder="Amount"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                    />
+                    <Button
+                      className="w-full rounded-2xl bg-slate-900 hover:bg-slate-800 text-white p-4"
+                      onClick={addExpense}
+                    >
+                      Add Expense
+                    </Button>
                   </div>
-
-                  <TextArea
-                    placeholder="Descrption (optional)"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
-
-                  <Select
-                    onValueChange={setSelectedContributor}
-                    defaultValue={selectedContributor}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Contributor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {contributors.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Button
-                    className="w-full rounded-2xl bg-slate-900 hover:bg-slate-800 text-white p-4"
-                    onClick={addExpense}
-                  >
-                    Add Expense
-                  </Button>
                 </motion.div>
               )}
             </AnimatePresence>

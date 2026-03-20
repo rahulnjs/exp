@@ -1,11 +1,17 @@
 import React from "react";
 
-export function Select({ children, onValueChange, defaultValue }: any) {
+export function Select({
+  children,
+  onValueChange,
+  defaultValue,
+  ...props
+}: any) {
   return (
     <select
       defaultValue={defaultValue}
       onChange={(e) => onValueChange?.(e.target.value)}
       className="w-full border rounded-xl p-3"
+      {...props}
     >
       {children}
     </select>
