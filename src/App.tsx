@@ -329,7 +329,7 @@ export default function BudgetTrackerApp() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4 pb-24 space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4 space-y-8">
       <div className="space-y-1">
         <h1
           className="text-3xl tracking-tight"
@@ -768,6 +768,7 @@ export default function BudgetTrackerApp() {
           );
         })}
       </div>
+      <div className="text-center text-[gray]">© Budgify, 2026</div>
     </div>
   );
 }
