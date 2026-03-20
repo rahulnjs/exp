@@ -29,6 +29,7 @@ interface Expense {
   date: string;
   contributorId: string;
   description?: string;
+  parent?: string;
 }
 
 interface Budget {
@@ -40,7 +41,7 @@ interface Budget {
 }
 
 function useDebounce() {
-  let timer: NodeJS.Timeout;
+  let timer;
   return (fn, t = 500) => {
     if (timer) {
       clearTimeout(timer);
@@ -72,6 +73,18 @@ const getFromattedDate = (d, withYear = true) => {
   const day = String(date.getDate()).padStart(2, "0");
 
   return withYear ? `${day}/${month}/${year}` : `${day}/${month}`;
+};
+
+const CATEGORY_ICONS = {
+  "Dine out": "🍜",
+  Grocery: "🛒",
+  Rent: "🏠",
+  Utilities: "⚡",
+  Cab: "🚕",
+  "Clothing & Misc": "👕",
+  "Raw Meat & Fish": "🥩",
+  Supplements: "💊",
+  default: "💳",
 };
 
 const initialBudgets: Budget[] = [
@@ -132,7 +145,6 @@ const initialBudgets: Budget[] = [
     expenses: [],
   },
 ];
-
 export default function BudgetTrackerApp() {
   const [budgets, setBudgets] = useState<Budget[]>(initialBudgets);
   const [contributors] = useState<Contributor[]>([
@@ -145,6 +157,9 @@ export default function BudgetTrackerApp() {
   const [description, setDescription] = useState<string>("");
   const [selectedContributor, setSelectedContributor] = useState<string>("1");
   const [toggles, setToggles] = useState<Record<string, boolean>>();
+  const [showFullOverview, setShowFullOverview] = useState(false);
+
+  const [showRecentExp, setShowRecentExp] = useState(false);
 
   const [cycleStart, nextCycleStart] = useMemo(() => getCycleStartDate(), []);
   const today = useMemo(() => getFromattedDate(new Date()), []);
@@ -299,11 +314,33 @@ export default function BudgetTrackerApp() {
     });
   }, [budgets]);
 
+  const recentSpends = budgets
+    .map((b) =>
+      b.expenses.map((e) => {
+        e.parent = b.name;
+        return e;
+      })
+    )
+    .flat();
+
+  recentSpends.sort((a, b) => {
+    //@ts-ignore
+    return new Date(b.date) - new Date(a.date);
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4 pb-24 space-y-8">
       <div className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Budget Overview
+        <h1
+          className="text-3xl tracking-tight"
+          style={{
+            fontFamily: '"Zain", sans-serif',
+            fontSize: "2.5rem",
+            color: "#FF5722",
+            fontWeight: 800,
+          }}
+        >
+          Budgify.
         </h1>
         <p className="text-sm text-slate-500">
           Billing cycle from {cycleStart.toDateString()}
@@ -316,7 +353,10 @@ export default function BudgetTrackerApp() {
       <div className="grid gap-4 md:grid-cols-2 sm:grid-cols-1">
         {/* Premium Overview Card */}
         <Card className="rounded-3xl border border-slate-600 border-solid shadow-2xl bg-white/80 backdrop-blur">
-          <CardContent className="p-7 space-y-6">
+          <CardContent
+            className="p-7 space-y-6"
+            onClick={() => setShowFullOverview((s) => !s)}
+          >
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-xs text-slate-400 uppercase tracking-wide">
@@ -358,103 +398,119 @@ export default function BudgetTrackerApp() {
               </div>
             </div>
 
-            {/* Contribution Split Premium */}
-            <div className="space-y-3 pt-2">
-              <div className="flex justify-between items-center text-sm font-medium">
-                <span>Contribution</span>
-                <div className="flex gap-6 text-xs text-slate-600">
-                  <span className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600" />
-                    {contributors[0]?.name}
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-gradient-to-r from-indigo-400 to-violet-600" />
-                    {contributors[1]?.name}
-                  </span>
-                </div>
-              </div>
-
-              <div className="w-full h-3 rounded-full overflow-hidden flex bg-slate-100 shadow-inner">
+            <AnimatePresence>
+              {showFullOverview && (
                 <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${contributorTotals[0]?.percent || 0}%` }}
-                  transition={{ duration: 0.7 }}
-                  className="h-3 bg-gradient-to-r from-emerald-400 to-emerald-600"
-                />
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${contributorTotals[1]?.percent || 0}%` }}
-                  transition={{ duration: 0.7 }}
-                  className="h-3 bg-gradient-to-r from-indigo-400 to-violet-600"
-                />
-              </div>
-            </div>
+                  initial={{ height: "0px" }}
+                  animate={{ height: "fit-content" }}
+                  transition={{ duration: 0.6 }}
+                  exit={{ height: "0px" }}
+                  className={``}
+                >
+                  {/* Contribution Split Premium */}
+                  <div className="space-y-3 pt-2">
+                    <div className="flex justify-between items-center text-sm font-medium">
+                      <span>Contribution</span>
+                      <div className="flex gap-6 text-xs text-slate-600">
+                        <span className="flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600" />
+                          {contributors[0]?.name}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full bg-gradient-to-r from-indigo-400 to-violet-600" />
+                          {contributors[1]?.name}
+                        </span>
+                      </div>
+                    </div>
 
-            <div className="mt-6 grid grid-cols-3 items-center gap-5">
-              <div>
-                <p className="text-2xl sm:text-xl  text-slate-700">
-                  {allDays}/{daysPassed}
-                </p>
-                <p className="text-xs text-slate-400 tracking-wide">
-                  Expsense days
-                </p>
-              </div>
-
-              <div>
-                <p className="text-2xl sm:text-xl  text-slate-700">
-                  {daysLeftInCycle}
-                </p>
-                <p className="text-xs text-slate-400 tracking-wide">
-                  Days left
-                </p>
-              </div>
-
-              <div>
-                <p className="text-2xl sm:text-xl  text-slate-700">
-                  ₹{contributorTotals[0].total}
-                </p>
-                <p className="text-xs text-slate-400 tracking-wide">
-                  By {contributors[0].name}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-2xl sm:text-xl  relative pr-7 text-slate-700">
-                  <div className="relative w-min">
-                    ₹{(totalSpentWithoutRent / daysPassed).toFixed(0)}
-                    <div className="absolute text-[10px] top-[3px] right-[-28px] font-normal text-[#b8b8b8]">
-                      / day
+                    <div className="w-full h-3 rounded-full overflow-hidden flex bg-slate-100 shadow-inner">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${contributorTotals[0]?.percent || 0}%`,
+                        }}
+                        transition={{ duration: 0.7 }}
+                        className="h-3 bg-gradient-to-r from-emerald-400 to-emerald-600"
+                      />
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${contributorTotals[1]?.percent || 0}%`,
+                        }}
+                        transition={{ duration: 0.7 }}
+                        className="h-3 bg-gradient-to-r from-indigo-400 to-violet-600"
+                      />
                     </div>
                   </div>
-                </p>
-                <p className="text-xs text-slate-400 tracking-wide">
-                  Spending rate
-                </p>
-              </div>
 
-              <div>
-                <p className="text-2xl sm:text-xl  relative pr-7 text-slate-700">
-                  <div className="relative w-min">
-                    ₹{(totalRemaining / daysLeftInCycle).toFixed(0)}
-                    <div className="absolute text-[10px] top-[3px] right-[-28px] font-normal text-[#b8b8b8]">
-                      / day
+                  <div className="mt-6 grid grid-cols-3 items-center gap-5">
+                    <div>
+                      <p className="text-2xl sm:text-xl  text-slate-700">
+                        {allDays}/{daysPassed}
+                      </p>
+                      <p className="text-xs text-slate-400 tracking-wide">
+                        Expsense days
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-2xl sm:text-xl  text-slate-700">
+                        {daysLeftInCycle}
+                      </p>
+                      <p className="text-xs text-slate-400 tracking-wide">
+                        Days left
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-2xl sm:text-xl  text-slate-700">
+                        ₹{contributorTotals[0].total}
+                      </p>
+                      <p className="text-xs text-slate-400 tracking-wide">
+                        By {contributors[0].name}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-2xl sm:text-xl  relative pr-7 text-slate-700">
+                        <div className="relative w-min">
+                          ₹{(totalSpentWithoutRent / daysPassed).toFixed(0)}
+                          <div className="absolute text-[10px] top-[3px] right-[-28px] font-normal text-[#b8b8b8]">
+                            / day
+                          </div>
+                        </div>
+                      </p>
+                      <p className="text-xs text-slate-400 tracking-wide">
+                        Spending rate
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-2xl sm:text-xl  relative pr-7 text-slate-700">
+                        <div className="relative w-min">
+                          ₹{(totalRemaining / daysLeftInCycle).toFixed(0)}
+                          <div className="absolute text-[10px] top-[3px] right-[-28px] font-normal text-[#b8b8b8]">
+                            / day
+                          </div>
+                        </div>
+                      </p>
+                      <p className="text-xs text-slate-400 tracking-wide">
+                        Safe to spend
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-2xl sm:text-xl  text-slate-700">
+                        ₹{contributorTotals[1].total}
+                      </p>
+                      <p className="text-xs text-slate-400 tracking-wide">
+                        By {contributors[1].name}
+                      </p>
                     </div>
                   </div>
-                </p>
-                <p className="text-xs text-slate-400 tracking-wide">
-                  Safe to spend
-                </p>
-              </div>
-
-              <div>
-                <p className="text-2xl sm:text-xl  text-slate-700">
-                  ₹{contributorTotals[1].total}
-                </p>
-                <p className="text-xs text-slate-400 tracking-wide">
-                  By {contributors[1].name}
-                </p>
-              </div>
-            </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </CardContent>
         </Card>
 
@@ -518,6 +574,55 @@ export default function BudgetTrackerApp() {
             </Button>
           </CardContent>
         </Card>
+
+        <Card className="rounded-3xl shadow-lg bg-white/80 backdrop-blur border border-slate-600 border-solid">
+          <CardContent
+            className="p-6 space-y-4"
+            onClick={() => setShowRecentExp((s) => !s)}
+          >
+            <h2 className="text-lg font-semibold">Recent expenses</h2>
+
+            <AnimatePresence>
+              {showRecentExp && (
+                <motion.div
+                  initial={{ height: "0px" }}
+                  animate={{ height: "fit-content" }}
+                  transition={{ duration: 0.6 }}
+                  exit={{ height: "0px" }}
+                  className={``}
+                >
+                  {recentSpends.slice(0, 5).map((e, i) => (
+                    <div
+                      style={{ borderBottom: i < 4 ? "1px solid #eaeaea" : "" }}
+                      className="pb-3 pt-3"
+                    >
+                      <div className="flex gap-2 mb-2">
+                        <div>{CATEGORY_ICONS[e.parent ?? ""]}</div>
+                        <div>{e.description || "-"}</div>
+                      </div>
+                      <div
+                        className="flex gap-1 w-[100%] justify-between"
+                        style={{ fontSize: ".8rem" }}
+                      >
+                        <div style={{ color: "gray" }}>
+                          {getFromattedDate(new Date(e.date), false)}
+                        </div>
+                        <div>
+                          ₹{e.amount}
+                          {" by "}
+                          {
+                            contributors.find((c) => c.id === e.contributorId)
+                              ?.name
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Individual Budgets */}
@@ -551,7 +656,9 @@ export default function BudgetTrackerApp() {
               >
                 <CardContent className="p-6 space-y-4">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-medium">{budget.name}</h3>
+                    <h3 className="font-medium">
+                      {CATEGORY_ICONS[budget.name]} {budget.name}
+                    </h3>
                     <span className="text-xs text-slate-500">
                       ₹{Math.abs(remaining)}{" "}
                       {remaining > 0 ? "left" : "over budget"}
