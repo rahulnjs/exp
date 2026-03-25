@@ -488,7 +488,8 @@ export default function BudgetTrackerApp() {
                     <div>
                       <p className="text-2xl sm:text-xl  relative pr-7 text-slate-700">
                         <div className="relative w-min">
-                          ₹{(totalRemaining / daysLeftInCycle).toFixed(0)}
+                          ₹
+                          {(totalRemaining / (daysLeftInCycle || 1)).toFixed(0)}
                           <div className="absolute text-[10px] top-[3px] right-[-28px] font-normal text-[#b8b8b8]">
                             / day
                           </div>
