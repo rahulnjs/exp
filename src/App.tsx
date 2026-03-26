@@ -184,7 +184,6 @@ export default function BudgetTrackerApp() {
   const lastExpenseName = useRef("");
 
   useEffect(() => {
-    debugger;
     fetch(
       `https://api.rider.rahulnjs.com/exp/${DB}/data/${getFromattedDate(
         cycleStart
@@ -613,7 +612,7 @@ export default function BudgetTrackerApp() {
                   exit={{ height: "0px" }}
                   className={``}
                 >
-                  {recentSpends.slice(0, 5).map((e, i) => (
+                  {recentSpends.slice(0, 10).map((e, i) => (
                     <div
                       style={{ borderBottom: i < 4 ? "1px solid #eaeaea" : "" }}
                       className="pb-3 pt-3"
@@ -640,6 +639,9 @@ export default function BudgetTrackerApp() {
                       </div>
                     </div>
                   ))}
+                  {recentSpends.length === 0 && (
+                    <div className="text-gray-400">No expenses yet.</div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
