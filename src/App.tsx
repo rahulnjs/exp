@@ -640,7 +640,7 @@ export default function BudgetTrackerApp() {
                     </div>
                   ))}
                   {recentSpends.length === 0 && (
-                    <div className="text-gray-400">No expenses yet.</div>
+                    <div className="text-gray-400">No expenses yet</div>
                   )}
                 </motion.div>
               )}
@@ -758,8 +758,11 @@ export default function BudgetTrackerApp() {
                               ))}
                               {budget.expenses.length === 0 && (
                                 <tr>
-                                  <td colSpan={4} className="text-center p-3">
-                                    No expenses yet.
+                                  <td
+                                    colSpan={4}
+                                    className="text-center p-3 text-gray-400"
+                                  >
+                                    No expenses yet
                                   </td>
                                 </tr>
                               )}
