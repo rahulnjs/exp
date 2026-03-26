@@ -60,8 +60,9 @@ const getCycleStartDate = () => {
   let cycleDate;
   if (now.getDate() >= 25) {
     cycleDate = new Date(year, month, 25);
+  } else {
+    cycleDate = new Date(year, month - 1, 25);
   }
-  cycleDate = new Date(year, month - 1, 25);
   const nextCycleDate = addMonths(cycleDate, 1);
   return [cycleDate, nextCycleDate];
 };
@@ -162,6 +163,7 @@ export default function BudgetTrackerApp() {
   const [showRecentExp, setShowRecentExp] = useState(false);
 
   const [cycleStart, nextCycleStart] = useMemo(() => getCycleStartDate(), []);
+
   const today = useMemo(() => getFromattedDate(new Date()), []);
   const daysPassed = useMemo(() => {
     let st = addDays(new Date(cycleStart), 1);
@@ -182,6 +184,7 @@ export default function BudgetTrackerApp() {
   const lastExpenseName = useRef("");
 
   useEffect(() => {
+    debugger;
     fetch(
       `https://api.rider.rahulnjs.com/exp/${DB}/data/${getFromattedDate(
         cycleStart
