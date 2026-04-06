@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
-import { Input, TextArea } from "./components/ui/input";
+import { DateInput, Input, TextArea } from "./components/ui/input";
 import {
   Select,
   SelectContent,
@@ -15,6 +15,8 @@ import {
   addMonths,
   addDays,
   isAfter,
+  format,
+  parse,
 } from "date-fns";
 import { toast } from "react-toastify";
 
@@ -155,6 +157,7 @@ export default function BudgetTrackerApp() {
 
   const [selectedBudget, setSelectedBudget] = useState<string>("1");
   const [amount, setAmount] = useState<string>("");
+  const [date, setDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [description, setDescription] = useState<string>("");
   const [selectedContributor, setSelectedContributor] = useState<string>("1");
   const [toggles, setToggles] = useState<Record<string, boolean>>();
@@ -224,7 +227,7 @@ export default function BudgetTrackerApp() {
                 id: Date.now().toString(),
                 amount: Number(amount),
                 description,
-                date: new Date().toISOString(),
+                date: parse(date, "yyyy-MM-dd", new Date()).toISOString(),
                 contributorId: selectedContributor,
               },
             ],
@@ -235,6 +238,7 @@ export default function BudgetTrackerApp() {
     );
     setAmount("");
     setDescription("");
+    setDate(format(new Date(), "yyyy-MM-dd"));
   };
 
   const saveData = async (c, b, overview) => {
@@ -329,6 +333,14 @@ export default function BudgetTrackerApp() {
     //@ts-ignore
     return new Date(b.date) - new Date(a.date);
   });
+
+  const sortedExpenses = (exps: Expense[]) => {
+    const _exp = [...exps];
+    _exp.sort((e1, e2) => {
+      return new Date(e1.date).getTime() - new Date(e2.date).getTime();
+    });
+    return _exp;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4 space-y-8">
@@ -566,22 +578,33 @@ export default function BudgetTrackerApp() {
                       style={{ margin: "16px 0px" }}
                     />
 
-                    <Select
-                      onValueChange={setSelectedContributor}
-                      defaultValue={selectedContributor}
-                      style={{ marginBottom: "16px" }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Contributor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {contributors.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="grid md:grid-cols-2 gap-4 mb-6">
+                      <Select
+                        onValueChange={setSelectedContributor}
+                        defaultValue={selectedContributor}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Contributor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {contributors.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <DateInput
+                        type="date"
+                        name="date"
+                        value={date}
+                        onChange={(e) =>
+                          setDate(
+                            format(new Date(e.target.value), "yyyy-MM-dd")
+                          )
+                        }
+                      />
+                    </div>
 
                     <Button
                       className="w-full rounded-2xl bg-slate-900 hover:bg-slate-800 text-white p-4"
@@ -732,7 +755,7 @@ export default function BudgetTrackerApp() {
                               </tr>
                             </thead>
                             <tbody>
-                              {budget.expenses.map((exp) => (
+                              {sortedExpenses(budget.expenses).map((exp) => (
                                 <tr className="text-sm">
                                   <td className="p-1 pl-2">
                                     {getFromattedDate(
